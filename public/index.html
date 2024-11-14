@@ -3,57 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Convertidor de Texto</title>
+    <title>Texto y Fuente</title>
 </head>
 <body>
-    <h1>Convertidor de Texto con Figlet</h1>
-
-    <form id="textForm">
-        <label for="text">Texto:</label>
-        <input type="text" id="text" name="text" required>
-        
-        <label for="font">Fuente:</label>
-        <select id="font" name="font"></select>
-        
-        <button type="submit">Convertir</button>
+    <form>
+        <label for="texto">Texto:</label>
+        <input type="text" id="texto" name="texto" required>
+        <label for="fuente">Fuente:</label>
+        <select id="fuente" name="fuente">
+            <!-- Las opciones de fuentes se llenarán automáticamente con JavaScript -->
+        </select>
+        <button type="submit">Generar</button>
     </form>
-    <pre id="figletOutput"></pre>
-
+    <pre id="respuesta"></pre>
+    <ul>
+        <li>
+            <a href="/logout">Cerrar Sesion</a>
+        </li>
+    </ul>
+    
     <script>
-        // Cargar fuentes en el select
-        fetch('http://localhost:3000/fonts')
-            .then(response => response.json())
-            .then(fonts => {
-                const fontSelect = document.getElementById('font');
-                fonts.forEach(font => {
-                    const option = document.createElement('option');
-                    option.value = font;
-                    option.text = font;
-                    fontSelect.appendChild(option);
-                });
-            })
-            .catch(error => {
-                console.error('Error cargando fuentes:', error);
-            });
 
-        // Enviar texto y fuente seleccionada al servidor
-        document.getElementById('textForm').onsubmit = function(event) {
-            event.preventDefault();
+        const respuesta = document.getElementById("respuesta");
 
-            const text = document.getElementById('text').value;
-            const font = document.getElementById('font').value;
-            const url = `http://localhost:3000/convert?text=${encodeURIComponent(text)}&font=${encodeURIComponent(font)}`;
-
-            fetch(url)
-                .then(response => response.text())
+        // Función para cargar las fuentes en el select
+        function cargarFuentes() {
+            fetch('/fuentes')
+                .then(response => response.json())
                 .then(data => {
-                    document.getElementById('figletOutput').innerText = data;
+                    const selectFuente = document.getElementById('fuente');
+                    // Limpiar el select antes de añadir nuevas opciones
+                    selectFuente.innerHTML = '';
+
+                    // Agregar cada fuente como opción en el select
+                    data.forEach(fuente => {
+                        const option = document.createElement('option');
+                        option.value = fuente;
+                        option.textContent = fuente;
+                        selectFuente.appendChild(option);
+                    });
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('Hubo un error al realizar la conversión.');
+                    console.error('Error al cargar las fuentes:', error);
                 });
-        };
+        }
+
+        // Llamamos a la función para cargar las fuentes al cargar la página
+        window.onload = cargarFuentes;
+
+        
+        document.querySelector('form').addEventListener('submit',
+        (e) =>{
+
+            //Quita el evento por defecto del formulario (action y method)
+
+            e.preventDefault(); 
+            
+            const formData = new FormData(document.querySelector('form'))
+            const text = formData.get('texto');
+            const font = formData.get('fuente');
+            
+            fetch(`/figlet?texto=${text}&fuente=${font}`)
+            .then(response => response.text())
+            .then(data => {
+                respuesta.textContent = data;
+            });
+        })
+        
     </script>
 </body>
 </html>
